@@ -1,0 +1,11 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: cart-mtls
+  namespace: k8s
+spec:
+  selector:
+    matchLabels:
+      app: cart-service
+  mtls:
+    mode: STRICT

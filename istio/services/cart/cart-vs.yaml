@@ -1,0 +1,26 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: cart-virtualservice
+  namespace: k8s
+spec:
+  gateways:
+  - k8s/k8s-gateway
+  hosts:
+  - '*'
+  http:
+  - match:
+    - uri:
+        prefix: /cart
+    rewrite:
+      uri: /
+    timeout: 10s
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: gateway-error,connect-failure,refused-stream,5xx
+    route:
+    - destination:
+        host: cart-service
+        port:
+          number: 80

@@ -1,0 +1,53 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: user-canary
+  namespace: k8s
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - k8s/k8s-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /user
+      headers:
+        x-version:
+          exact: v2
+    rewrite:
+      uri: /
+    timeout: 10s
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: gateway-error,connect-failure,refused-stream,5xx
+    route:
+    - destination:
+        host: user-service
+        subset: v2
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /user
+    rewrite:
+      uri: /
+    timeout: 10s
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: gateway-error,connect-failure,refused-stream,5xx
+    route:
+    - destination:
+        host: user-service
+        subset: v1
+        port:
+          number: 80
+      weight: 90
+    - destination:
+        host: user-service
+        subset: v2
+        port:
+          number: 80
+      weight: 10

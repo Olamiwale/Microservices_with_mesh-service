@@ -57,13 +57,27 @@ step 6- build docker image and push to Azure registry
 
 
 # Build Docker image
-docker build -t briitzacr.azurecr.io/order-service:v1 . (Ensure image name is the)
+docker build -t briitzacr.azurecr.io/order-service:v1
+
+docker build -t briitzacr.azurecr.io/shipping-service:v1
+docker build -t briitzacr.azurecr.io/notification-service:v1
+docker build -t briitzacr.azurecr.io/cart-service:v1
+docker build -t briitzacr.azurecr.io/inventory-service:v1
+
+
+ . (Ensure image name is the)
 
 # Log in to Azure Container Registry (ACR)
 az acr login --name <my-acr-name> make sure you're login before pushing.
 
 # Push the image to ACR
 docker push <my-acr-name>.azurecr.io/my--name:v1
+
+docker push briitzacr.azurecr.io/cart-service:v1
+docker push briitzacr.azurecr.io/shipping-service:v1
+docker push briitzacr.azurecr.io/notification-service:v1
+docker push briitzacr.azurecr.io/inventory-service:v1
+
 docker push briitzacr.azurecr.io/order-service:v1
 
 ## On Local: If using minikube
@@ -83,7 +97,12 @@ docker push docker.io/my-image-name:v1
 
 
 step 7 - set up namespace, deployment and service file and apply all
-kubectl apply -f deployment.yaml
+
+kubectl apply -f cart/deployment.yaml
+kubectl apply -f inventory/deployment.yaml
+kubectl apply -f notification/deployment.yaml
+kubectl apply -f shipping/deployment.yaml
+
 kubectl apply -f service.yaml
 
 
@@ -93,81 +112,56 @@ kubectl get pods -n my-namespace
 
 kubectl get service -n you-name-space
 
-deployment pod should be 2/2 if everything is set up accordingly if getting error refer to <link> for image error troubleshooting
 
 
 
-Step 9 - set up istio mesh for ingress routing
 
 
-# Install Istio with demo profile
-echo "Installing Istio control plane..."
+
+
+
+
+
+## SETTING UP ISTIO FOR MESH ROUTING
+
+-Step-1 Installation
+
+# download latest (Linux/macOS)
+curl -L https://istio.io/downloadIstio | sh -
+
+# move into the new istio directory (example name)
+cd istio-*
+
+# add istioctl to path for this shell session
+export PATH=$PWD/bin:$PATH
+
+# check
+istioctl version
+
+
+-install Istio control panel
+# demo profile 
 istioctl install --set profile=demo -y
 
-# Verify Istio installation
-kubectl get pods -n istio-system
 
-# Install Istio addons (Kiali, Prometheus, Grafana, Jaeger)
-echo "Installing observability tools..."
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.20/samples/addons/prometheus.yaml
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.20/samples/addons/grafana.yaml
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.20/samples/addons/kiali.yaml
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.20/samples/addons/jaeger.yaml
+after verifying istio installation and configuration. three files were created gateway file which handles external traffic of all the services,  Virtualservice (handles retires and timeout of each services) destinationrul and peerauthentication (Encrypts all traffic between your microservices inside the mesh 'user-mtls.yaml') for each microservices
 
-# Wait for addons to be ready
-kubectl rollout status deployment/kiali -n istio-system
-kubectl rollout status deployment/grafana -n istio-system
+```
+kubectl apply -f istio/virtualservices/user-virtualservice.yaml
+kubectl apply -f istio/destinationrules/user-destinationrule.yaml
 
 
-
-# Wait for all deployments
-echo "Waiting for deployments to be ready..."
-kubectl wait --for=condition=available --timeout=300s deployment --all -n my-namespace
-
-
-# Verify Deployment
-
-kubectl get pods -n ecommerce
-kubectl get svc -n ecommerce
-kubectl get virtualservices -n my-namespace
-kubectl get destinationrules -n my-namespace
-
-# Get Gateway IP
+```
+verify if setup is wprking 'curl http://<EXTERNAL-IP>/user
+'
 
 
-# Test Services
+Add observabity and telemetry (promethues, grafana and jaeger)
+run this command to authematically install the tools for observability
+---
+kubectl apply -f samples/addons -n istio-system
+---
 
-curl -s http://$GATEWAY_URL/api/products | jq '.' || curl -s http://$GATEWAY_URL/api/products
+## canary deployment set up
 
-
-# Deploy Canary (10% traffic to v2)
-
-
-kubectl apply -f canary_deployment.yaml
-
-
-# Configure Fault Injection
-
-
-kubectl apply -f fault_injection.yaml
-
-echo "  kubectl create job --from=cronjob/fault-injection-test test-$(date +%s) -n ecommerce"
-
-# STEP 9: Access Observability Tools
-
-echo "Starting port-forwards for observability tools..."
-
-# Kiali
-kubectl port-forward -n istio-system svc/kiali 20001:20001 > /dev/null 2>&1 &
-"Kiali (Service Mesh): http://localhost:20001"
-
-# 
-kubectl port-forward -n istio-system svc/grafana 3000:3000 
-"Grafana (Metrics): http://localhost:3000"
-
-# Jaeger
-kubectl port-forward -n istio-system svc/tracing 16686:16686  &"Jaeger (Tracing): http://localhost:16686"
-
-# Prometheus
-kubectl port-forward -n istio-system svc/prometheus 9090:9090 
-echo "Prometheus (Metrics): http://localhost:9090"
+for canary deployment, a new deployment file is created 'deployment-v2' with another image created on with the same docker file, a user-dr-subset is created
