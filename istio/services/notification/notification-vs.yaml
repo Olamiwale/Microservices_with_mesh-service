@@ -1,0 +1,26 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: notification-virtualservice
+  namespace: k8s
+spec:
+  hosts:
+  - "*"
+  gateways:
+    - k8s/k8s-gateway
+  http:
+    - match:
+      - uri:
+          prefix: /notification
+      rewrite:
+        uri: /
+      timeout: 10s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream,5xx
+      route:
+        - destination:
+            host: notification-service
+            port:
+              number: 80

@@ -1,0 +1,11 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: notification-mtls
+  namespace: k8s
+spec:
+  selector:
+    matchLabels:
+      app: notification-service
+  mtls:
+    mode: STRICT

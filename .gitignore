@@ -11,3 +11,6 @@ monitoring/
 
 service/order/node_modules
 service/user/node_modules
+
+
+.gitignore

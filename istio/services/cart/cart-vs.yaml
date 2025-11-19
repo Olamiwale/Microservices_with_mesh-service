@@ -11,7 +11,7 @@ spec:
   http:
   - match:
     - uri:
-        prefix: /cart
+        prefix: /cart/
     rewrite:
       uri: /
     timeout: 10s

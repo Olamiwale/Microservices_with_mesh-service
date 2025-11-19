@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: user-canary
+  name: user-virtualservice
   namespace: k8s
 spec:
   hosts:
@@ -30,7 +30,7 @@ spec:
           number: 80
   - match:
     - uri:
-        prefix: /user
+        prefix: /user/
     rewrite:
       uri: /
     timeout: 10s

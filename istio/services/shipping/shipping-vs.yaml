@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: shipping-canary
+  name: shipping-virtualservice
   namespace: k8s
 spec:
   hosts:
@@ -30,7 +30,7 @@ spec:
           number: 80
   - match:
     - uri:
-        prefix: /shipping
+        prefix: /shipping/
     rewrite:
       uri: /
     timeout: 10s

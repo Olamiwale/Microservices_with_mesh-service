@@ -1,0 +1,11 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: product-mtls
+  namespace: k8s
+spec:
+  selector:
+    matchLabels:
+      app: product-service
+  mtls:
+    mode: STRICT

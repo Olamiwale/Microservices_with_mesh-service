@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart-deployment-v1
+  namespace: k8s
+  labels:
+    app: cart-deployment-v1
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cart-service
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: cart-service
+        version: v1
+    spec:
+      containers:
+        - name: cart-service
+          image: briitzacr.azurecr.io/cart-service:v5
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
