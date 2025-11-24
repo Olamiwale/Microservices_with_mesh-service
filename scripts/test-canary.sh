@@ -1,4 +1,3 @@
-#script for test test canary for 
 
 echo "Testing Canary Deployment - 10% traffic to v2 (new version) and the 90% rto the v1 (old version)"
     
