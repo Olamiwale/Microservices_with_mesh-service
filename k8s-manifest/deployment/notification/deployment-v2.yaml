@@ -1,28 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: shipping-deployment-v2
+  name: notification-deployment-v2
   namespace: k8s
   labels:
-    app: shipping-service
+    app: notification-service
     version: v2
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      app: shipping-service
+      app: notification-service
       version: v2
   template:
     metadata:
       labels:
-        app: shipping-service
+        app: notification-service
         version: v2
     spec:
       containers:
-        - name: shipping-service
-          image: briitzacr.azurecr.io/shipping-service:v2
+        - name: notification-service
+          image: briitzacr.azurecr.io/notification-service:v2
           ports:
-            - containerPort: 3000
+            - containerPort: 8080
           resources:
             requests:
               cpu: "100m"

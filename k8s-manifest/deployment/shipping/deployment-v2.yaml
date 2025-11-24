@@ -1,28 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cart-deployment-v2
+  name: shipping-deployment-v2
   namespace: k8s
   labels:
-    app: cart-service
+    app: shipping-service
     version: v2
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: cart-service
+      app: shipping-service
       version: v2
   template:
     metadata:
       labels:
-        app: cart-service
+        app: shipping-service
         version: v2
     spec:
       containers:
-        - name: cart-service
-          image: briitzacr.azurecr.io/cart-service:v2
+        - name: shipping-service
+          image: briitzacr.azurecr.io/shipping-service:v2
           ports:
-            - containerPort: 3000
+            - containerPort: 8080
           resources:
             requests:
               cpu: "100m"

@@ -1,4 +1,4 @@
-apiVersion: networking.istio.io/v1alpha3
+apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: product-virtualservice
@@ -7,20 +7,47 @@ spec:
   hosts:
   - "*"
   gateways:
-    - k8s/k8s-gateway
+  - k8s/k8s-gateway
   http:
-    - match:
-      - uri:
-          prefix: /product/
-      rewrite:
-        uri: /
-      timeout: 10s
-      retries:
-        attempts: 3
-        perTryTimeout: 2s
-        retryOn: gateway-error,connect-failure,refused-stream,5xx
-      route:
-        - destination:
-            host: product-service
-            port:
-              number: 80
+  - match:
+    - uri:
+        prefix: /product/
+      headers:
+        x-version:
+          exact: v2
+    rewrite:
+      uri: /
+    timeout: 10s
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: gateway-error,connect-failure,refused-stream,5xx
+    route:
+    - destination:
+        host: product-service
+        subset: v2
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /product/
+    rewrite:
+      uri: /
+    timeout: 10s
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: gateway-error,connect-failure,refused-stream,5xx
+    route:
+    - destination:
+        host: product-service
+        subset: v1
+        port:
+          number: 80
+      weight: 90
+    - destination:
+        host: product-service
+        subset: v2
+        port:
+          number: 80
+      weight: 10

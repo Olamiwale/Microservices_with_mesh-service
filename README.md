@@ -3,7 +3,45 @@
 
 This is a production-grade microservices e-commerce system showcasing **DevOps best practices, Kubernetes deployments, CI/CD pipelines, and Istio service mesh**.
 
+
+#### Architecture Overview
+
 The architecture of this project consists **eight services**, each independently deployed, containerized, and managed inside Kubernetes with **full observability, mTLS, canary releases, retries, circuit-breaking, and fault injection**.
+
+
+┌────────────────────────────────────────────────────────────────┐
+│                      Istio Ingress Gateway                     │
+│                           (mTLS)                               │
+└──────────────────────┬─────────────────────────────────────────┘
+                       │
+       ┌───────────────┼───────────────┐
+       │               │               │
+   ┌───▼────┐     ┌────▼───┐       ┌───▼────┐
+   │Product │     │ Cart   │       │ User   │
+   │Service │     │Service │       │Service │
+   │v1 (90%)│     │        │       │        │
+   │v2 (10%)│     └────┬───┘       └────────┘
+   └───┬────┘          │
+       │               │
+       │          ┌────▼─────┐
+       │          │Inventory │
+       │          │ Service  │
+       │          └──────────┘
+       │
+   ┌───▼────────┐
+   │   Order    │
+   │  Service   │
+   └───┬────────┘
+       │
+       ├──────────┬────────────┬────────────┐
+       │          │            │            │
+   ┌───▼───┐ ┌────▼────┐  ┌────▼─────┐ ┌────▼───────┐
+   │Payment│ │Shipping │  │Inventory │ │Notification│
+   │Service│ │Service  │  │  Service │ │   Service  │
+   │       │ │         │  │          │ │            │
+   └───────┘ └─────────┘  └──────────┘ └────────────┘
+
+
 
 
 ## Tech Stack
@@ -74,10 +112,28 @@ Install the following before starting:
 - **Node.js / npm** — https://nodejs.org  
 - **Docker Desktop** — https://www.docker.com  
 - **VS Code** — https://code.visualstudio.com  
-- **Istio** — https://istio.io/latest/docs/setup/getting-started/  
 - **Azure CLI** — for ACR/AKS deployments  
 
----
+- **Istio** — https://istio.io/latest/docs/setup/getting-started/ 
+
+   Install Istio:
+
+```bash
+    curl -L https://istio.io/downloadIstio | sh -
+    cd istio-*
+    export PATH=$PWD/bin:$PATH
+```
+Install control plane:
+
+```bash
+   istioctl install --set profile=demo -y
+```
+Verify:
+
+```bash
+   istioctl version
+   kubectl get pods -n istio-system
+```
 
 ### Project Setup & File Tree
 
@@ -119,30 +175,28 @@ Ecommerce/
 
 
 
-#### Step 1 — Build & Test Services Locally  
+#### Step 1 — Enviroment s up Cluster and Build Services   
 Each service was developed and tested locally using Node.js, Python, or Go to confirm output, routes, and inter-service behavior.
+
 
 #### Step 2 — Dockerizing Each Service
 
   **Log in to ACR**
-
 ```bash
 az acr login --name <acr-name>
 ```
- **Build and Push**
 
+ **Build and Push**
 ```bash
 docker build -t acr-name.azurecr.io/user-service:v1 .
 docker push acr-name.azurecr.io/user-service:v1
-````
-Repeat for all services (cart, order, product, etc.).
-
+```` 
+```
+Repeat for other services (cart,product,inventory,notification)
 
 
 #### Step 3 — Kubernetes Deployment
-
 Create namespace:
-
 ```bash
 kubectl create ns k8s
 ```
@@ -153,13 +207,10 @@ Apply deployment + service:
 kubectl apply -f user/deployment-v1.yaml
 kubectl apply -f user/service.yaml
 ```
-
 For canary (v2):
-
 ```bash
 kubectl apply -f user/deployment-v2.yaml
 ```
-
 Check status:
 
 ```bash
@@ -168,36 +219,11 @@ kubectl get pods -n k8s
 kubectl get svc -n k8s
 ```
 
-**Note:** All services use `ClusterIP` because Istio manages traffic internally.
+**Note:** All services use `ClusterIP` because Istio manages traffic internally
+          App listen Port must match the container to avoid upstream error 
 
----
 
-#### Step 4 — Install & Configure Istio
-
-Install Istio:
-
-```bash
-curl -L https://istio.io/downloadIstio | sh -
-cd istio-*
-export PATH=$PWD/bin:$PATH
-```
-
-Install control plane:
-
-```bash
-istioctl install --set profile=demo -y
-```
-
-Verify:
-
-```bash
-istioctl version
-kubectl get pods -n istio-system
-```
-
----
-
-#### Step 5 — Apply Istio Configuration
+#### Step 4 — Apply Istio Configuration
 
 Each service receives:
 
@@ -216,18 +242,16 @@ Test external access:
 ```bash
 curl http://<INGRESS-IP>/user
 ```
-
 ---
 
 #### Step 6 — Observability
-
-Port-forward or use ingress:
 
 ### **Kiali**
 
 ```
 istioctl dashboard kiali
 ```
+![Kalia-screenshot](./z/deploy.png)
 
 ### **Jaeger**
 
@@ -278,4 +302,3 @@ This project demonstrates **real-world DevOps, SRE, and microservice patterns** 
 It is suitable for **portfolio, interviews, cloud engineering practice, and Kubernetes learning**.
 
 
-![Kalia-screenshot](./zzz/images/kalia.png)

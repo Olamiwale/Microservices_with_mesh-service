@@ -1,28 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: order-deployment-v2
+  name: inventory-deployment-v2
   namespace: k8s
   labels:
-    app: order-service
+    app: inventory-service
     version: v2
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      app: order-service
+      app: inventory-service
       version: v2
   template:
     metadata:
       labels:
-        app: order-service
+        app: inventory-service
         version: v2
     spec:
       containers:
-        - name: order-service
-          image: briitzacr.azurecr.io/order-service:v2
+        - name: inventory-service
+          image: briitzacr.azurecr.io/inventory-service:v2
           ports:
-            - containerPort: 3000
+            - containerPort: 8080
           resources:
             requests:
               cpu: "100m"

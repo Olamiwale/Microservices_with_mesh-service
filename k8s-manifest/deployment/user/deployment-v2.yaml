@@ -22,7 +22,7 @@ spec:
         - name: user-service
           image: briitzacr.azurecr.io/user-service:v2
           ports:
-            - containerPort: 3000
+            - containerPort: 8080
           resources:
             requests:
               cpu: "100m"
