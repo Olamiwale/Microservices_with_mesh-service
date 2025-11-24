@@ -1,14 +1,13 @@
 #script for test test canary for 
 
-echo "Testing Canary Deployment - 10% traffic to v2 (new version) and the 90% rto the v1"
-echo "=============================================="
+echo "Testing Canary Deployment - 10% traffic to v2 (new version) and the 90% rto the v1 (old version)"
     
 v1_count=0
 v2_count=0
 total_requests=100
     
 for i in $(seq 1 $total_requests); do
-response=$(curl -s http://product-service:8080/api/products)
+response=$(curl -s http://product-service:8080/product/health)
 version=$(echo $response | grep -o '"version":"v[12]"' | cut -d'"' -f4)
       
 if [ "$version" == "v1" ]; then
